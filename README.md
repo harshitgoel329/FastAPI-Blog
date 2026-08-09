@@ -2,10 +2,6 @@
 
 A production-oriented full-stack blogging platform built with **FastAPI**, **PostgreSQL**, **SQLAlchemy**, **JWT authentication**, and **Jinja2**. The application provides secure user authentication, blog post CRUD operations, profile management, password reset, image processing, pagination, database migrations, and automated testing.
 
-## Demo
-
-Add screenshots or a short demo video/GIF here to showcase the application interface and key workflows.
-
 ## Features
 
 ### Authentication & Authorization
