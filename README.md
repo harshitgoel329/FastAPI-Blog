@@ -1,57 +1,53 @@
-
 # FastAPI Blog
 
-A full-stack blog application built with **FastAPI**, **PostgreSQL**, **SQLAlchemy 2.0**, and **Jinja2**. The project includes JWT-based authentication, user account management, post CRUD operations, profile-picture handling, password reset via email, pagination, database migrations, and automated API tests.
+A production-oriented full-stack blogging platform built with **FastAPI**, **PostgreSQL**, **SQLAlchemy**, **JWT authentication**, and **Jinja2**. The application provides secure user authentication, blog post CRUD operations, profile management, password reset, image processing, pagination, database migrations, and automated testing.
+
+## Demo
+
+Add screenshots or a short demo video/GIF here to showcase the application interface and key workflows.
 
 ## Features
 
-### Authentication & Users
-- User registration with Pydantic validation
-- Secure password hashing with `pwdlib`
-- JWT access-token authentication
+### Authentication & Authorization
+- User registration and login
+- JWT-based authentication
 - OAuth2 password flow
-- Protected user endpoints
-- Get current authenticated user
-- Update username and email
-- Delete user account
-- Change password
-- Forgot-password flow with expiring reset tokens
-- Password reset through email
-- Profile-picture upload and deletion
-- Image validation, resizing, EXIF correction, and compression
-- Maximum profile-image upload size of 5 MB
+- Protected API endpoints
+- Ownership-based authorization
+- Secure password hashing
 
 ### Blog Posts
-- Create posts
-- Retrieve a single post
-- Update posts completely with `PUT`
-- Partially update posts with `PATCH`
-- Delete posts
-- Authorization so users can only modify their own posts
+- Create, read, update, and delete posts
+- Full and partial post updates
 - Paginated post listings
-- Paginated posts for individual users
-- Post author information included in API responses
-- Post likes field with an Alembic migration
+- User-specific posts
+- Post ownership validation
 
-### Web Interface
-The application also includes a server-rendered web interface using **Jinja2 templates**, with pages for:
-- Home / post listing
-- Individual posts
-- User posts
-- Login
-- Registration
-- Account management
-- Forgot password
-- Reset password
-- Error handling
+### User Management
+- Update account information
+- Change password
+- Profile-picture upload and deletion
+- Image validation and processing
 
-### Reliability & Testing
-- Async database access using SQLAlchemy
-- Health-check endpoint
-- Custom API and HTML exception handlers
-- Automated async API tests with `pytest` and `httpx`
-- Database fixtures with transactional rollback
-- Mock AWS environment using `moto` in tests
+### Password Recovery
+- Forgot-password flow
+- Secure reset tokens
+- Token expiration
+- Password reset through email
+
+### Database & Backend
+- PostgreSQL database
+- SQLAlchemy ORM
+- Alembic migrations
+- Async database operations
+- Pydantic request/response validation
+
+### Testing
+- Automated API tests
+- Async testing with HTTPX
+- Pytest fixtures
+- Database isolation for tests
+- AWS S3 mocking with Moto
 
 ## Tech Stack
 
@@ -79,19 +75,17 @@ The application also includes a server-rendered web interface using **Jinja2 tem
 FastAPI-Blog/
 ├── alembic/
 │   └── versions/
-│       ├── 1c58dc494b99_initial_schema.py
-│       └── 9649c460126e_add_likes_to_posts.py
 ├── media/
 │   └── profile_pics/
 ├── routers/
-│   ├── posts.py
-│   └── users.py
 ├── static/
 ├── templates/
 ├── tests/
-│   ├── conftest.py
-│   ├── test_posts.py
-│   └── test_users.py
+├── .env.example
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── alembic.ini
 ├── auth.py
 ├── config.py
 ├── database.py
@@ -99,11 +93,24 @@ FastAPI-Blog/
 ├── image_utils.py
 ├── main.py
 ├── models.py
-├── schemas.py
 ├── populate_db.py
-├── alembic.ini
-└── .gitignore
+└── schemas.py
 ```
+
+> `.env` and `.venv/` are intentionally excluded from the repository through `.gitignore`.
+
+## How It Works
+
+The application follows a layered backend architecture:
+
+1. The client sends HTTP requests to FastAPI routes.
+2. Router modules handle endpoint-specific logic.
+3. Pydantic schemas validate incoming and outgoing data.
+4. Authentication dependencies validate JWT access tokens for protected endpoints.
+5. SQLAlchemy handles database operations against PostgreSQL.
+6. Alembic manages database schema migrations.
+7. Utility modules handle email delivery and profile-image processing.
+8. Pytest and HTTPX are used to test the API independently of the production application.
 
 ## API Endpoints
 
@@ -164,34 +171,49 @@ The project requires:
 - PostgreSQL
 - A configured email/SMTP server if password-reset emails are used
 
-The repository currently does not include a `requirements.txt` file, so install the dependencies used by the project:
+All Python dependencies are listed in `requirements.txt`.
 
-```bash
-pip install fastapi uvicorn sqlalchemy "psycopg[binary]" alembic \
-pydantic pydantic-settings email-validator python-multipart \
-jinja2 pillow pyjwt "pwdlib[argon2]" aiosmtplib boto3 \
-httpx pytest anyio "moto[s3]"
-```
-
-For a cleaner setup, freeze the working environment into a dependency file:
-
-```bash
-pip freeze > requirements.txt
-```
-
-Then future installations can use:
+Install them with:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+## Environment Variables
+
+Create a `.env` file in the project root based on `.env.example`.
+
+Example:
+
+```env
+DATABASE_URL=postgresql+psycopg://username:password@localhost:5432/fastapi_blog
+SECRET_KEY=replace-with-a-long-random-secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+MAX_UPLOAD_SIZE_BYTES=5242880
+POSTS_PER_PAGE=10
+RESET_TOKEN_EXPIRE_MINUTES=60
+
+MAIL_SERVER=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@example.com
+MAIL_PASSWORD=your-email-password
+MAIL_FROM=your-email@example.com
+MAIL_USE_TLS=true
+
+FRONTEND_URL=http://localhost:8000
+```
+
+Never commit `.env` to GitHub. It may contain database credentials, JWT secrets, and email credentials.
 
 ## Installation
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/fastapi-blog.git
-cd fastapi-blog
+git clone https://github.com/harshitgoel329/FastAPI-Blog.git
+cd FastAPI-Blog
 ```
 
 ### 2. Create a virtual environment
@@ -216,11 +238,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-If you have not created `requirements.txt` yet, install the dependencies from the Requirements section above.
-
 ### 4. Create the PostgreSQL database
 
-Create a PostgreSQL database and user, then configure the connection string in your environment variables.
+Create a PostgreSQL database and user, then configure the connection string in your `.env` file.
 
 Example:
 
@@ -230,29 +250,29 @@ postgresql+psycopg://username:password@localhost:5432/fastapi_blog
 
 ### 5. Configure environment variables
 
-Create a `.env` file in the project root.
+Create `.env` from `.env.example` and fill in your local PostgreSQL, JWT, and email configuration.
 
-```env
-DATABASE_URL=postgresql+psycopg://username:password@localhost:5432/fastapi_blog
-SECRET_KEY=replace-with-a-long-random-secret
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+### 6. Run database migrations
 
-MAX_UPLOAD_SIZE_BYTES=5242880
-POSTS_PER_PAGE=10
-RESET_TOKEN_EXPIRE_MINUTES=60
-
-MAIL_SERVER=smtp.example.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@example.com
-MAIL_PASSWORD=your-email-password
-MAIL_FROM=your-email@example.com
-MAIL_USE_TLS=true
-
-FRONTEND_URL=http://localhost:8000
+```bash
+alembic upgrade head
 ```
 
-**Never commit `.env` to GitHub.** The repository's `.gitignore` is configured to exclude environment files.
+## Running the Application
+
+Start the development server with:
+
+```bash
+uvicorn main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+The application serves both the HTML interface and the `/api` endpoints.
 
 ## Database Migrations
 
@@ -277,22 +297,6 @@ alembic upgrade head
 ```
 
 The project also currently creates missing tables during application startup through the FastAPI lifespan handler.
-
-## Running the Application
-
-Start the development server with:
-
-```bash
-uvicorn main:app --reload
-```
-
-Open:
-
-```text
-http://127.0.0.1:8000
-```
-
-The application serves both the HTML interface and the `/api` endpoints.
 
 ## Authentication
 
@@ -385,7 +389,7 @@ The tests cover functionality including:
 - Profile-picture uploads
 - Password-reset email triggering
 
-The test suite uses `moto` to mock AWS services and uses a separate PostgreSQL test database configured in `tests/conftest.py`.
+The test suite uses `moto` to mock AWS services and a separate PostgreSQL test database configured in `tests/conftest.py`.
 
 ## Security Considerations
 
@@ -416,6 +420,10 @@ Potential extensions include:
 - Docker and Docker Compose setup
 - CI/CD pipeline with automated tests
 - Production deployment configuration
+
+## Project Status
+
+This project is a portfolio/learning project demonstrating a production-oriented FastAPI backend with authentication, database persistence, file processing, email workflows, migrations, and automated testing.
 
 ## License
 
