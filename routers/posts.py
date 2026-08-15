@@ -2,7 +2,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy import select, func
+from sqlalchemy import or_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -59,7 +59,21 @@ async def create_post(post: PostCreate, current_user: CurrentUser, db: Annotated
     await db.refresh(new_post, attribute_names=["author"])
     return new_post
     
+@router.get("/search")
+async def search_post(search_term:Annotated[str,Query(min_length=3, max_length=20)],db:Annotated[AsyncSession,Depends(get_db)]):
 
+    result = await db.execute(select(models.Post).where(
+        or_(
+            models.Post.title.ilike(f"%{search_term}%"),
+            models.Post.content.ilike(f"%{search_term}%"),
+        )
+        ))
+
+    post = result.scalars().all()
+    if not post:
+        return []
+
+    return post
 
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(post_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
@@ -151,3 +165,4 @@ async def delete_post(post_id: int, current_user: CurrentUser, db: Annotated[Asy
 
     await db.delete(post)
     await db.commit()
+
